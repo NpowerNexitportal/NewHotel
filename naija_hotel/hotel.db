@@ -1,0 +1,100 @@
+-- Run this in SQLite to create the database
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,  -- Hashed
+    role TEXT CHECK(role IN ('Super Admin', 'Admin', 'Staff', 'Customer')) NOT NULL,
+    email TEXT UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE customers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    full_name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    address TEXT,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE rooms (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_number TEXT UNIQUE NOT NULL,
+    room_type TEXT NOT NULL,
+    price_per_night REAL NOT NULL,  -- in ₦
+    availability BOOLEAN DEFAULT TRUE,
+    description TEXT
+);
+
+CREATE TABLE bookings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER,
+    room_id INTEGER,
+    check_in DATE NOT NULL,
+    check_out DATE NOT NULL,
+    total_amount REAL NOT NULL,  -- in ₦
+    status TEXT DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers (id),
+    FOREIGN KEY (room_id) REFERENCES rooms (id)
+);
+
+CREATE TABLE payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id INTEGER,
+    amount REAL NOT NULL,  -- in ₦
+    payment_method TEXT CHECK(payment_method IN ('Bank Transfer', 'USSD', 'Card')) NOT NULL,
+    transaction_id TEXT UNIQUE,
+    status TEXT DEFAULT 'Pending',
+    paid_at TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings (id)
+);
+
+CREATE TABLE add_ons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    price REAL NOT NULL,  -- in ₦
+    description TEXT
+);
+
+CREATE TABLE booking_add_ons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id INTEGER,
+    add_on_id INTEGER,
+    quantity INTEGER DEFAULT 1,
+    FOREIGN KEY (booking_id) REFERENCES bookings (id),
+    FOREIGN KEY (add_on_id) REFERENCES add_ons (id)
+);
+
+CREATE TABLE pool_bookings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id INTEGER,
+    time_slot TEXT NOT NULL,  -- e.g., '10:00-12:00'
+    date DATE NOT NULL,
+    FOREIGN KEY (booking_id) REFERENCES bookings (id)
+);
+
+CREATE TABLE restaurant_reservations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id INTEGER,
+    num_people INTEGER NOT NULL,
+    time TEXT NOT NULL,
+    date DATE NOT NULL,
+    FOREIGN KEY (booking_id) REFERENCES bookings (id)
+);
+
+CREATE TABLE housekeeping_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER,
+    request_type TEXT NOT NULL,  -- e.g., 'Cleaning'
+    status TEXT DEFAULT 'Pending',
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers (id)
+);
+
+-- Sample Data
+INSERT INTO users (username, password, role, email) VALUES ('admin', 'pbkdf2:sha256:260000$example$hashedpass', 'Admin', 'admin@hotel.com');
+INSERT INTO customers (user_id, full_name, phone) VALUES (1, 'John Doe', '08012345678');
+INSERT INTO rooms (room_number, room_type, price_per_night, description) VALUES ('101', 'Single', 25000.00, 'Standard single room');
+INSERT INTO add_ons (name, price, description) VALUES ('Pool Access', 5000.00, 'Hourly pool access'); 

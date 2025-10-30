@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Naija Hotel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Naija Hotel Admin</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/customer/profile">Customer View</a>
+                <button class="btn btn-outline-light" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1><i class="bi bi-gear-fill"></i> Admin Dashboard</h1>
+        <p>Welcome, Admin! Manage your hotel operations below. All prices in ₦.</p>
+
+        <!-- Tabs for Navigation -->
+        <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" onclick="loadUsers()">Users</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rooms-tab" data-bs-toggle="tab" data-bs-target="#rooms" type="button" role="tab" onclick="loadRooms()">Rooms</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="addons-tab" data-bs-toggle="tab" data-bs-target="#addons" type="button" role="tab" onclick="loadAddons()">Add-ons</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" onclick="loadPayments()">Payments</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab" onclick="loadReports()">Reports</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabContent">
+            <!-- Users Tab -->
+            <div class="tab-pane fade show active" id="users" role="tabpanel">
+                <h3>Manage Users</h3>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#userModal" onclick="prepareUserForm('create')">Add User</button>
+                <table class="table table-striped">
+                    <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Email</th><th>Actions</th></tr></thead>
+                    <tbody id="usersTable"></tbody>
+                </table>
+            </div>
+
+            <!-- Rooms Tab -->
+            <div class="tab-pane fade" id="rooms" role="tabpanel">
+                <h3>Manage Rooms</h3>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#roomModal" onclick="prepareRoomForm('create')">Add Room</button>
+                <table class="table table-striped">
+                    <thead><tr><th>ID</th><th>Number</th><th>Type</th><th>Price (₦/night)</th><th>Available</th><th>Actions</th></tr></thead>
+                    <tbody id="roomsTable"></tbody>
+                </table>
+            </div>
+
+            <!-- Add-ons Tab -->
+            <div class="tab-pane fade" id="addons" role="tabpanel">
+                <h3>Manage Add-ons</h3>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addonModal" onclick="prepareAddonForm('create')">Add Add-on</button>
+                <table class="table table-striped">
+                    <thead><tr><th>ID</th><th>Name</th><th>Price (₦)</th><th>Description</th><th>Actions</th></tr></thead>
+                    <tbody id="addonsTable"></tbody>
+                </table>
+            </div>
+
+            <!-- Payments Tab -->
+            <div class="tab-pane fade" id="payments" role="tabpanel">
+                <h3>Verify Payments</h3>
+                <table class="table table-striped">
+                    <thead><tr><th>ID</th><th>Booking ID</th><th>Method</th><th>Amount (₦)</th><th>Status</th><th>Transaction ID</th><th>Actions</th></tr></thead>
+                    <tbody id="paymentsTable"></tbody>
+                </table>
+            </div>
+
+            <!-- Reports Tab -->
+            <div class="tab-pane fade" id="reports" role="tabpanel">
+                <h3>Reports</h3>
+                <div id="reportsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">User Management</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <input type="hidden" id="userId">
+                        <div class="mb-3"><label>Username</label><input type="text" class="form-control" id="username" required></div>
+                        <div class="mb-3"><label>Password</label><input type="password" class="form-control" id="password" required></div>
+                        <div class="mb-3"><label>Role</label>
+                            <select class="form-control" id="role">
+                                <option>Customer</option><option>Staff</option><option>Admin</option><option>Super Admin</option>
+                            </select>
+                        </div>
+                        <div class="mb-3"><label>Email</label><input type="email" class="form-control" id="email"></div>
+                        <div class="mb-3"><label>Full Name (for Customers)</label><input type="text" class="form-control" id="fullName"></div>
+                        <div class="mb-3"><label>Phone (for Customers)</label><input type="text" class="form-control" id="phone"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Modal (Similar structure) -->
+    <div class="modal fade" id="roomModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Room Management</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="roomForm">
+                        <input type="hidden" id="roomId">
+                        <div class="mb-3"><label>Room Number</label><input type="text" class="form-control" id="roomNumber" required></div>
+                        <div class="mb-3"><label>Type</label><input type="text" class="form-control" id="roomType" required></div>
+                        <div class="mb-3"><label>Price per Night (₦)</label><input type="number" class="form-control" id="roomPrice" required></div>
+                        <div class="mb-3"><label>Available</label><select class="form-control" id="roomAvailable"><option>true</option><option>false</option></select></div>
+                        <div class="mb-3"><label>Description</label><textarea class="form-control" id="roomDesc"></textarea></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveRoom()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add-on Modal (Similar) -->
+    <div class="modal fade" id="addonModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Add-on Management</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="addonForm">
+                        <input type="hidden" id="addonId">
+                        <div class="mb-3"><label>Name</label><input type="text" class="form-control" id="addonName" required></div>
+                        <div class="mb-3"><label>Price (₦)</label><input type="number" class="form-control" id="addonPrice" required></div>
+                        <div class="mb-3"><label>Description</label><textarea class="form-control" id="addonDesc"></textarea></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAddon()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = '/'; }
+
+        // Load functions
+        function loadUsers() {
+            fetch('/customers', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(r => r.json()).then(data => {
+                    const tbody = document.getElementById('usersTable');
+                    tbody.innerHTML = data.map(u => `
+                        <tr>
+                            <td>${u.id}</td>
+                            <td>${u.username}</td>
+                            <td>${u.role}</td>
+                            <td>${u.email}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="editUser(${u.id})">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }).catch(err => alert('Error loading users: ' + err));
+        }
+
+        function loadRooms() {
+            fetch('/rooms', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(r => r.json()).then(data => {
+                    const tbody = document.getElementById('roomsTable');
+                    tbody.innerHTML = data.map(room => `
+                        <tr>
+                            <td>${room.id}</td>
+                            <td>${room.room_number}</td>
+                            <td>${room.room_type}</td>
+                            <td>${room.price_per_night}</td>
+                            <td>${room.availability ? 'Yes' : 'No'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="editRoom(${room.id})">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteRoom(${room.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }).catch(err => alert('Error loading rooms: ' + err));
+        }
+
+        function loadAddons() {
+            fetch('/addons', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(r => r.json()).then(data => {
+                    const tbody = document.getElementById('addonsTable');
+                    tbody.innerHTML = data.map(addon => `
+                        <tr>
+                            <td>${addon.id}</td>
+                            <td>${addon.name}</td>
+                            <td>${addon.price}</td>
+                            <td>${addon.description}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="editAddon(${addon.id})">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAddon(${addon.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }).catch(err => alert('Error loading add-ons: ' + err));
+        }
+
+        function loadPayments() {
+            // Assume /payments endpoint added to backend
+            fetch('/payments', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(r => r.json()).then(data => {
+                    const tbody = document.getElementById('paymentsTable');
+                    tbody.innerHTML = data.map(p => `
+                        <tr>
+                            <td>${p.id}</td>
+                            <td>${p.booking_id}</td>
+                            <td>${p.payment_method}</td>
+                            <td>${p.amount}</td>
+                            <td>${p.status}</td>
+                            <td>${p.transaction_id}</td>
+                            <td>
+                                ${p.payment_method === 'Bank Transfer' && p.status === 'Pending' ? `<button class="btn btn-sm btn-success" onclick="verifyPayment(${p.id})">Verify</button>` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                }).catch(err => alert('Error loading payments: ' + err));
+        }
+
+        function loadReports() {
+            fetch('/reports/occupancy', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(r => r.json()).then(data => {
+                    document.getElementById('reportsContent').innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Occupancy Rate: ${data.occupancy_rate.toFixed(2)}%</h5>
+                                <p>Total Revenue: ₦${data.revenue.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    `;
+                }).catch(err => alert('Error loading reports: ' + err));
+        }
+
+        // CRUD Functions (Examples)
+        function prepareUserForm(action, id = null) {
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = id || '';
+            if (id) {
+                // Fetch user data and populate form (add fetch('/users/' + id))
+                document.querySelector('#userModal .modal-title').textContent = 'Edit User';
+            } else {
+                document.querySelector('#userModal .modal-title').textContent = 'Add User';
+            }
+        }
+
+        function saveUser() {
+            const formData = new FormData(document.getElementById('userForm'));
+            const data = Object.fromEntries(formData);
+            data.role = document.getElementById('role').value;
+            data.password = document.getElementById('password').value;  // Hash in backend
+            const url = data.id ? '/users/' + data.id : '/register';  // PUT for edit
+            fetch(url, {
+                method: data.id ? 'PUT' : 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(() => { bootstrap.Modal.getInstance(document.getElementById('userModal')).hide(); loadUsers(); });
+        }
+
+        function editUser(id) { prepareUserForm('edit', id); }
+        function deleteUser(id) {
+            if (confirm('Delete user?')) {
+                fetch('/users/' + id, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
+                    .then(() => loadUsers());
+            }
+        }
+
+        // Similar for rooms, addons (adapt saveRoom, deleteRoom, etc.)
+        function prepareRoomForm(action, id = null) {
+            // Similar to user
+        }
+        function saveRoom() {
+            // POST/PUT to /rooms
+        }
+        function editRoom(id) { /* Fetch and populate */ }
+        function deleteRoom(id) { /* DELETE /rooms/id */ }
+
+        function prepareAddonForm(action, id = null) { /* Similar */ }
+        function saveAddon() { /* POST/PUT /addons */ }
+        function editAddon(id) { /* ... */ }
+        function deleteAddon(id) { /* ... */ }
+
+        function verifyPayment(id) {
+            const txId = prompt('Enter Transaction ID:');
+            fetch(`/verify_transfer/${id}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transaction_id: txId })
+            }).then(() => loadPayments());
+        }
+
+        function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
+
+        // Init: Load first tab
+        loadUsers();
+    </script>
+</body>
+</html>

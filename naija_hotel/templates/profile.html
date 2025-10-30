@@ -1,0 +1,28 @@
+<div class="container mt-5">
+    <h2>My Bookings</h2>
+    <table class="table">
+        <thead><tr><th>ID</th><th>Room</th><th>Dates</th><th>Total (₦)</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="bookingsTable"></tbody>
+    </table>
+    <h3>Housekeeping Request</h3>
+    <form>
+        <select class="form-control mb-2" name="request_type">
+            <option>Cleaning</option>
+            <option>Laundry</option>
+        </select>
+        <button type="button" class="btn btn-primary" onclick="requestHousekeeping()">Request</button>
+    </form>
+</div>
+<script>
+    // Fetch bookings via API, populate table
+    fetch('/bookings', {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(res => res.json()).then(bookings => {
+        const tbody = document.getElementById('bookingsTable');
+        bookings.forEach(b => {
+            const tr = `<tr><td>${b.id}</td><td>${b.room_number}</td><td>${b.check_in} to ${b.check_out}</td><td>${b.total_amount}</td><td>${b.status}</td><td><button onclick="cancelBooking(${b.id})">Cancel</button></td></tr>`;
+            tbody.innerHTML += tr;
+        });
+    });
+    function requestHousekeeping() {
+        // POST to /housekeeping
+    }
+</script>

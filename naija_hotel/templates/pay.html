@@ -1,0 +1,47 @@
+<div class="container mt-5">
+    <h2>Pay ₦{{ total }} for Booking #{{ booking_id }}</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <button class="btn btn-outline-primary w-100 mb-2" onclick="selectMethod('Card')">Card (Visa/MC/Verve)</button>
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-outline-success w-100 mb-2" onclick="selectMethod('USSD')">USSD (*737#)</button>
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-outline-info w-100 mb-2" onclick="selectMethod('Bank Transfer')">Bank Transfer</button>
+        </div>
+    </div>
+    <form id="paymentForm" style="display:none;">
+        <!-- Dynamic fields for card/USSD -->
+        <div id="cardFields">
+            <input type="text" class="form-control mb-2" placeholder="Card Number" name="card_number">
+            <input type="text" class="form-control mb-2" placeholder="CVV" name="cvv">
+            <!-- Expiry, PIN fields -->
+        </div>
+        <div id="ussdFields">
+            <p>Dial *737# and follow prompts for ₦{{ total }}</p>
+        </div>
+        <div id="bankFields">
+            <p>Transfer to: GTBank | 0123456789 | Hotel XYZ</p>
+            <input type="text" class="form-control" placeholder="Transaction Reference" name="transaction_id">
+        </div>
+        <button type="button" class="btn btn-success" onclick="processPayment({{ booking_id }})">Pay Now</button>
+    </form>
+</div>
+<script>
+    function selectMethod(method) {
+        document.getElementById('paymentForm').style.display = 'block';
+        // Show relevant fields
+        fetch(`/pay/${{{ booking_id }}}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({method: method, amount: {{ total }}, transaction_id: document.querySelector('[name="transaction_id"]').value})
+        }).then(res => res.json()).then(data => {
+            if (data.link) window.location.href = data.link;  // For card redirect
+            if (data.details) alert(`Transfer to ${JSON.stringify(data.details)}`);
+        });
+    }
+    function processPayment(booking_id) {
+        // Similar fetch to /pay/<booking_id>
+    }
+</script>
